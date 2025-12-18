@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gesture Data Collection</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(145deg, #c9d6ff, #e2e2e2);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #bgVideo {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      z-index: -1;
+      object-fit: cover;
+  }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      color: #222;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      margin-bottom: 25px;
+      font-weight: 600;
+      font-size: 1.9rem;
+      color: #333;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6e8efb, #a777e3);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #5b73e8, #9b61dc);
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      font-weight: 600;
+      color: #007bff;
+      transition: color 0.3s;
+    }
+
+    a:hover {
+      color: #0056b3;
+    }
+
+    #status {
+      margin-top: 20px;
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    #camera-frame {
+      display: none;
+      margin-top: 20px;
+      border: 2px solid rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      width: 100%;
+    }
+    /* Outside Important Icon Styling */
+        .important-wrapper {
+            position: fixed;
+            right: 30%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .dashboard-icon, .collect-icon {
+            position: relative;
+            border: 2px solid #08092e;
+            border-radius: 8px;
+            padding: 18px 20px;
+            background: transparent;
+            font-size: 1.6rem;
+            color: #08092e;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-icon i,
+        .collect-icon i {
+            font-size: 2rem;
+        }
+        
+        .dashboard-icon:hover,
+        .collect-icon:hover {
+            background: rgba(255, 77, 77, 0.05);
+            transform: scale(1.05);
+        }
+        
+        .important-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            transform: translate(25%, -25%);
+            background: #08092e;
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 50px;
+            box-shadow: 0 0 8px rgba(255, 77, 77, 0.7);
+        }
+        
+        .robot-frame {
+            border: 2px solid #08092e;
+            border-radius: 8px;
+            padding: 8px;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .robot-frame img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        
+  </style>
+</head>
+<body>
+  <video autoplay muted loop id="bgVideo">
+    <source src="{{ url_for('static', filename='admin1.mp4') }}" type="video/mp4">
+    Your browser does not support HTML5 video.
+</video>
+  <div class="glass-card">
+    <h2>🖐️ Gesture Collector</h2>
+    <form id="gesture-form">
+      <input type="text" name="gesture" id="gestureInput" placeholder="Enter Gesture Name" required />
+      <button type="submit">Start Collecting</button>
+    </form>
+
+    <img id="camera-frame" src="" alt="Gesture Camera Feed">
+
+    <a href="/">🏠 Back to Home</a>
+    <div id="status"></div>
+  </div>
+  <div class="important-wrapper">
+    <div class="robot-frame" onclick="window.location.href = 'http://127.0.0.1:5001/'">
+      <img src="static/robots.webp" alt="Robot" />
+  </div>
+  <div class="dashboard-icon" onclick="window.location.href = 'http://127.0.0.1:5002/'">
+    <i class="fas fa-user-secret"></i>
+</div>
+</div>
+  <script>
+    let eventSource;
+
+    document.getElementById('gesture-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const gesture = document.getElementById('gestureInput').value.trim();
+      if (!gesture) return alert("Please enter a gesture name!");
+
+      fetch('/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'gesture=' + encodeURIComponent(gesture)
+      }).then(response => {
+        document.getElementById('camera-frame').src = '/video_feed';
+        document.getElementById('camera-frame').style.display = 'block';
+
+        eventSource = new EventSource('/collect_status');
+        eventSource.onmessage = function(event) {
+          if (event.data === 'done') {
+            document.getElementById('camera-frame').style.display = 'none';
+            eventSource.close();
+            Swal.fire({
+              title: 'Save Collected Data?',
+              text: "Do you want to save or discard this gesture data?",
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'Save',
+              cancelButtonText: 'Delete',
+              confirmButtonColor: '#6e8efb'
+            }).then((result) => {
+              fetch('/finalize_data', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ save: result.isConfirmed })
+              })
+              .then(r => r.json())
+              .then(data => {
+                Swal.fire({
+                  title: data.status === 'success' ? '✅ Success' : '❌ Error',
+                  text: data.message,
+                  icon: data.status === 'success' ? 'success' : 'error',
+                  confirmButtonColor: '#6e8efb'
+                }).then(() => {
+                  if (data.status === 'success') {
+                    Swal.fire({
+                      title: 'Train Model?',
+                      text: "Do you want to train the model now?",
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonText: 'Train',
+                      cancelButtonText: 'Later',
+                      confirmButtonColor: '#6e8efb'
+                    }).then((train) => {
+                      if (train.isConfirmed) {
+                        fetch('/train', { method: 'POST' })
+                          .then(r => r.json())
+                          .then(trainData => {
+                            Swal.fire({
+                              title: trainData.status === 'success' ? '✅ Trained' : '❌ Failed',
+                              text: trainData.message,
+                              icon: trainData.status === 'success' ? 'success' : 'error',
+                              confirmButtonColor: '#6e8efb'
+                            });
+                          });
+                      }
+                    });
+                  }
+                });
+              });
+            });
+            
+          }
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

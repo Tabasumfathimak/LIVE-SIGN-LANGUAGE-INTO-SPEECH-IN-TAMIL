@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖐️ Gesture Name Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #e0eafc, #cfdef3);
+            font-family: 'Quicksand', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 900px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            color: #333;
+            animation: fadeIn 0.8s ease forwards;
+            position: relative;
+            margin:10px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #4e54c8;
+            margin-bottom: 20px;
+        }
+
+        .total {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 25px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 12px;
+        }
+
+        th, td {
+            padding: 14px 20px;
+            text-align: center;
+        }
+
+        th {
+            background: rgba(78, 84, 200, 0.9);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        td {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+            color: #333;
+            transition: transform 0.3s ease;
+        }
+
+        td:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+
+        button {
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin: 0 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button.edit {
+            background-color: #4e54c8;
+            color: white;
+        }
+
+        button.delete {
+            background-color: #ff416c;
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .pagination {
+            margin-top: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pagination button {
+            background-color: #4e54c8;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .page-counter {
+            font-size: 1rem;
+            color: #4e54c8;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 8px 18px;
+            border-radius: 50px;
+            box-shadow: 0 0 20px rgba(78, 84, 200, 0.2);
+            transition: all 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Outside Important Icon Styling */
+        .important-wrapper {
+            position: fixed;
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .important-icon, .collect-icon {
+            position: relative;
+            border: 2px solid #08092e;
+            border-radius: 8px;
+            padding: 18px 20px;
+            background: transparent;
+            font-size: 1.6rem;
+            color: #08092e;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .important-icon i,
+        .collect-icon i {
+            font-size: 2rem;
+        }
+        
+        .important-icon:hover,
+        .collect-icon:hover {
+            background: rgba(255, 77, 77, 0.05);
+            transform: scale(1.05);
+        }
+        
+        .important-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            transform: translate(25%, -25%);
+            background: #08092e;
+            color: white;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 50px;
+            box-shadow: 0 0 8px rgba(255, 77, 77, 0.7);
+        }
+        
+        .robot-frame {
+            border: 2px solid #08092e;
+            border-radius: 8px;
+            padding: 8px;
+            background: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .robot-frame img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        
+        /* Popup Styling */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .popup-box {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: pop 0.3s ease forwards;
+        }
+        
+        .popup-box h2 {
+            margin: 0 0 15px;
+            font-size: 1.4rem;
+            color: #4e54c8;
+        }
+        
+        .popup-box input {
+            width: 80%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .popup-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .popup-buttons button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        
+        .popup-buttons .confirm {
+            background-color: #4e54c8;
+            color: white;
+        }
+        
+        .popup-buttons .cancel {
+            background-color: #08092e;
+            color: white;
+        }
+        
+        /* Small success toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4e54c8;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+            z-index: 1001;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @keyframes pop {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .reverse-icon {
+            position: relative;
+            border: 2px solid #08092e;
+            border-radius: 8px;
+            padding: 18px 20px;
+            background: transparent;
+            font-size: 1.6rem;
+            color: #08092e;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .reverse-icon i {
+            font-size: 2rem;
+        }
+
+        .reverse-icon:hover {
+            background: rgba(78, 84, 200, 0.05);
+            transform: scale(1.05);
+        }
+        #bgVideo {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+      
+    </style>
+</head>
+<body>
+    <video autoplay muted loop id="bgVideo">
+        <source src="{{ url_for('static', filename='admin1.mp4') }}" type="video/mp4">
+        Your browser does not support HTML5 video.
+    </video>
+    <div class="container">
+        <h1>🖐️ Gesture Name Dashboard</h1>
+        <div id="totalCount" class="total">Total Gestures: 0</div>
+        <div class="table-container">
+            <table id="gestureTable">
+                <thead>
+                    <tr>
+                        <th>Gesture Name</th>
+                        <th>Count</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="pagination">
+                <button id="prevPage" onclick="changePage(-1)">Prev</button>
+                <div id="pageCounter" class="page-counter">Page 1</div>
+                <button id="nextPage" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="important-wrapper">
+        <div id="collectIcon" class="collect-icon" onclick="window.location.href = 'http://127.0.0.1:5000/'">
+            <i class="fas fa-layer-group"></i>
+        </div>
+        
+        <div id="importantIcon" class="important-icon" onclick="toggleImportant()">
+            <i class="fas fa-triangle-exclamation"></i>
+            <div id="importantCount" class="important-count">0</div>
+        </div>
+        <div class="robot-frame" onclick="window.location.href = 'http://127.0.0.1:5001/'">
+            <img src="static/robots.webp" alt="Robot" />
+        </div>
+        <!-- Reverse icon added here -->
+        <div class="reverse-icon" onclick="reverseList()">
+            <i class="fas fa-arrow-alt-circle-down"></i>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">Edited Successfully!</div>
+    
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let gesturesArray = [];
+        let showOnlyImportant = false;
+
+        async function loadCSV() {
+            try {
+                const response = await fetch('/gesture_data.csv');
+                const data = await response.text();
+                const lines = data.trim().split('\n');
+                const gestures = {};
+
+                lines.forEach(line => {
+                    const name = line.split(',')[0].trim();
+                    if (name && name !== "gesture") {
+                        gestures[name] = (gestures[name] || 0) + 1;
+                    }
+                });
+
+                gesturesArray = Object.entries(gestures);
+                document.getElementById('totalCount').textContent = `Total Gestures: ${gesturesArray.length}`;
+                updateImportantCount();
+                displayPage();
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+            }
+        }
+
+        function updateImportantCount() {
+            const importantCount = gesturesArray.filter(([_, count]) => count < 50).length;
+            const badge = document.getElementById('importantCount');
+            badge.textContent = importantCount;
+            badge.style.display = importantCount > 0 ? 'inline-block' : 'none';
+        }
+
+        function displayPage() {
+            const tbody = document.querySelector("#gestureTable tbody");
+            tbody.innerHTML = '';
+
+            let filteredGestures = showOnlyImportant
+                ? gesturesArray.filter(([_, count]) => count < 50)
+                : gesturesArray;
+
+            const totalItems = filteredGestures.length;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = filteredGestures.slice(startIndex, endIndex);
+
+            pageItems.forEach(([name, count]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${name}</td>
+                    <td>${count}</td>
+                    <td>
+                        <button class="edit" onclick="editName('${name}')">Edit</button>
+                        <button class="delete" onclick="deleteName('${name}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = endIndex >= totalItems;
+            document.getElementById('pageCounter').textContent = `Page ${currentPage} of ${Math.ceil(totalItems / itemsPerPage)}`;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            displayPage();
+        }
+
+        function toggleImportant() {
+            showOnlyImportant = !showOnlyImportant;
+            currentPage = 1;
+            displayPage();
+        }
+
+        function showAllGestures() {
+            showOnlyImportant = false;
+            currentPage = 1;
+            displayPage();
+        }
+
+        function reverseList() {
+            gesturesArray.reverse();
+            displayPage();
+        }
+
+        function deleteName(name) {
+            Swal.fire({
+                title: `Delete "${name}"?`,
+                text: "This will remove all entries of this gesture!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#ff4d4d',
+                cancelButtonColor: '#4e54c8'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/delete_gesture/${encodeURIComponent(name)}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(result => {
+                            gesturesArray = gesturesArray.filter(([gestureName]) => gestureName !== name);
+                            updateImportantCount();
+                            currentPage = 1;
+                            displayPage();
+                            Swal.fire('Deleted!', `"${name}" has been deleted.`, 'success');
+                        })
+                        .catch(error => console.error('Delete failed:', error));
+                }
+            });
+        }
+
+        function editName(name) {
+            Swal.fire({
+                title: `Rename "${name}"`,
+                input: 'text',
+                inputValue: name,
+                showCancelButton: true,
+                confirmButtonText: 'Update',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#4e54c8',
+                cancelButtonColor: '#ff4d4d',
+                inputValidator: (value) => {
+                    if (!value) return 'Name cannot be empty!';
+                    if (value === name) return 'Same name entered!';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const newName = result.value.trim();
+                    fetch(`/edit_gesture/${encodeURIComponent(name)}/${encodeURIComponent(newName)}`, { method: 'PUT' })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                gesturesArray = gesturesArray.map(([gestureName, count]) => 
+                                    gestureName === name ? [newName, count] : [gestureName, count]
+                                );
+                                updateImportantCount();
+                                displayPage();
+                                showToast('Edited Successfully!');
+                            } else {
+                                Swal.fire('Error', 'Could not rename the gesture!', 'error');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Edit failed:', err);
+                            Swal.fire('Error', 'Something went wrong!', 'error');
+                        });
+                }
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        window.onload = loadCSV;
+    </script>
+</body>
+</html>

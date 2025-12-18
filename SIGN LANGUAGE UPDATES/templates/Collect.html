@@ -1,0 +1,137 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gesture Collector</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    /* existing style untouched */
+    body {
+      background: linear-gradient(135deg, #1e1e2f, #34345e);
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      overflow: hidden;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card-box {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    input[type="text"] {
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+
+    .btn-glow {
+      padding: 12px 30px;
+      font-size: 18px;
+      background: #00f0ff;
+      color: #000;
+      border-radius: 30px;
+      border: none;
+      transition: 0.3s ease;
+      box-shadow: 0 0 10px #00f0ff, 0 0 40px #00f0ff40, 0 0 80px #00f0ff20;
+    }
+
+    .btn-glow:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00f0ff, 0 0 60px #00f0ff80;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 15px;
+      margin-top: 25px;
+      display: none;
+      border: 2px solid #00f0ff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card-box">
+  <h2 class="mb-4">✋ Gesture Collector</h2>
+  <input type="text" id="gestureName" placeholder="Enter Gesture Name" />
+  <button class="btn-glow" onclick="collect_data()">Collect</button>
+  <video id="video" autoplay playsinline></video>
+</div>
+
+<script>
+    let stream;
+    let video = document.getElementById('video');
+    let gestureNameInput = document.getElementById('gestureName');
+  
+    async function startCamera() {
+      const gestureName = gestureNameInput.value.trim();
+      if (!gestureName) {
+        alert("Please enter a gesture name.");
+        return;
+      }
+  
+      video.style.display = 'block';
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+  
+      let count = 0;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+  
+      const interval = setInterval(async () => {
+        if (count >= 50) {
+          clearInterval(interval);
+          alert("✅ Collected 50 samples!");
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+  
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+  
+        const base64Image = canvas.toDataURL('image/jpeg');
+  
+        const res = await fetch('/collect_data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            gesture_name: gestureName,
+            image: base64Image
+          })
+        });
+  
+        const result = await res.json();
+        if (result.success) {
+          console.log(`✅ Sample ${count + 1}/50`);
+          count++;
+        } else {
+          console.warn("❌", result.error);
+        }
+      }, 200); // Collect every 200ms
+    }
+  </script>
+  
+</body>
+</html>

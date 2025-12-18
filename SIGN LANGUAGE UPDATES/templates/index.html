@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAT - Gesture Recognition</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: sans-serif;
+        }
+        
+        #bgVideo {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;  /* Ensures vertical center */
+            height: 100vh;
+            text-align: center;
+            color: white;
+        }
+        
+        
+        .animated-title {
+            font-size: 3rem;
+            color: white;
+            transition: transform 1s ease-in-out, opacity 1s ease-in-out;
+        }
+        .move-up {
+            transform: translateY(-50px);
+            opacity: 0;
+        }
+        #openCamera {
+            margin-top: 20px;
+            transition: transform 1s ease-in-out, opacity 1s ease-in-out;
+            cursor: pointer;
+        }
+        .move-down {
+            transform: translateY(50px);
+            opacity: 0;
+        }
+        .frame-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+            gap: 20px;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .show-frame {
+            opacity: 1;
+        }
+        .camera-frame, .image-frame {
+            border-radius: 10px;
+            width: 400px;
+            height: 400px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            
+        }
+
+        .close-btn {
+            margin-top: 20px;
+            display: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #gestureText {
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 100%;
+        }
+        video, img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .gesture-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+
+        @keyframes fadeInOut {
+            0% {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            10% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            90% {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-20px);
+            }
+          }
+          
+          .custom-modal {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.15);
+          }
+          
+          .fancy-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #fff;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 1rem;
+            box-shadow: inset 0 0 8px rgba(0, 255, 255, 0.2);
+          }
+          
+          .fancy-input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.08);
+          }
+          
+          .neon-btn-green {
+            background: transparent;
+            border: 1px solid #00ff99;
+            color: #00ffcc;
+            border-radius: 10px;
+            padding: 8px 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+          }
+          
+          .neon-btn-green:hover {
+            background: #00ffcc;
+            color: black;
+            box-shadow: 0 0 15px #00ffcc;
+          }
+          
+          .neon-btn-red {
+            background: transparent;
+            border: 1px solid #ff4d4d;
+            color: #ff8080;
+            border-radius: 10px;
+            padding: 8px 18px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+          }
+          
+          .neon-btn-red:hover {
+            background: #ff4d4d;
+            color: white;
+            box-shadow: 0 0 15px #ff4d4d;
+          }
+          
+          .error-text {
+            color: #ff4d4d;
+            font-size: 0.9rem;
+            display: none;
+          }
+          
+          #lockIcon {
+            font-size: 2.5rem;
+            transition: all 0.4s ease;
+          }
+          
+          .unlock {
+            transform: rotateY(360deg);
+            color: #00ffcc;
+          }
+          
+    </style>
+</head>
+<body>
+    <video autoplay muted loop id="bgVideo">
+        <source src="{{ url_for('static', filename='bgForSLITNeuralNetwork.mp4') }}" type="video/mp4">
+        Your browser does not support HTML5 video.
+    </video>
+    
+
+<!-- 🛠 Robot gif fixed on left side (initial only) -->
+<div id="robotGifContainer" style="position: fixed; top: 33%; left: 20px; z-index: 10; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#passwordModal">
+    <img src="{{ url_for('static', filename='robo-frontpage.gif') }}"
+         alt="Robot Animation"
+         class="animate__animated animate__bounceInLeft"
+         style="height: 220px; pointer-events: none;">
+</div>
+
+
+
+<div class="content">
+    <h1 class="animated-title" id="vatTitle"><b>Welcome to VAT - Gesture Recognition</b></h1>
+    <div id="introText"></div>
+    
+    <button class="btn btn-light" id="openCamera">Open Camera</button>
+
+
+    <div class="frame-container" id="frameContainer">
+        <div class="camera-frame" id="cameraContainer">
+            <img id="videoFeed" width="640px" height="480px" style="display: none;" alt="Click to start camera">
+        </div>
+        <div class="image-frame" id="imageContainer">
+            <video id="roboVideo" autoplay loop muted style="display: none;">
+                <source src="{{ url_for('static', filename='robo_video.mp4') }}" type="video/mp4">
+            </video>
+            
+            
+            <img id="roboImage" src="{{ url_for('static', filename='robots.webp') }}" alt="Robot Image" style="display: block;">
+            
+        </div></div>
+        
+        <div class="gesture-container">
+            <p id="gestureText" style="display: none;">Detected Gesture: None</p>
+        </div>
+    
+
+    <button class="btn btn-danger close-btn" id="closeCamera">Close Camera</button>    </div>
+
+<!-- 🔒 Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content custom-modal animate__animated animate__fadeInUp">
+        <div class="modal-header border-0 text-white">
+          <h5 class="modal-title" id="passwordModalLabel">🔐 Enter Secret Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="closeModal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div id="lockIcon" class="mb-3">🔒</div>
+          <input type="password" id="secretPassword" class="form-control fancy-input mb-3" placeholder="Enter your password">
+          <div id="passwordStatus" class="error-text">❌ Incorrect password. Try again.</div>
+        </div>
+        <div class="modal-footer border-0 d-flex justify-content-between">
+          <button class="btn neon-btn-red" data-bs-dismiss="modal" id="cancelBtn">Cancel</button>
+          <button class="btn neon-btn-green" onclick="validatePassword()">Unlock</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let openBtn = document.getElementById("openCamera");
+            let closeBtn = document.getElementById("closeCamera");
+            let videoFeed = document.getElementById("videoFeed");
+            let frameContainer = document.getElementById("frameContainer");
+            let cameraContainer = document.getElementById("cameraContainer");
+            let imageContainer = document.getElementById("imageContainer");
+            let gestureText = document.getElementById("gestureText");
+            let robotGifContainer = document.getElementById("robotGifContainer");
+            let introContainer = document.getElementById("introText");
+        
+            const introLines = [
+                "Voice Assistance in Tamil (VAT)<br>for deaf and dumb.",
+                "Gesture Recognition Module",
+                "Live Sign Language into Speech<br>in Tamil",
+                "Developed By Varsha, Abinaya,<br> Tabasumfathima (VAT) 😜"
+            ];
+
+        
+            let introIndex = 0;
+            let introInterval;
+            let isPaused = false;
+        
+            function showNextLine() {
+                if (isPaused) return;
+              
+                introContainer.innerHTML = "";
+              
+                const line = document.createElement("div");
+                line.className = "animated-line";
+                line.innerHTML = introLines[introIndex];
+              
+                introContainer.appendChild(line);
+              
+                introIndex = (introIndex + 1) % introLines.length;
+                introInterval = setTimeout(showNextLine, 4000); // 4 seconds per line
+              }
+              
+            
+        
+            // ✅ Start animation on load
+            showNextLine();
+        
+            openBtn.addEventListener("click", function () {
+                console.log("Open Camera Clicked");
+        
+                if (robotGifContainer) {
+                    robotGifContainer.style.display = "none";
+                }
+        
+                document.getElementById("vatTitle").classList.add("move-up");
+                openBtn.classList.add("move-down");
+        
+                // Pause intro
+                isPaused = true;
+                clearTimeout(introInterval);
+                introContainer.style.display = "none";
+        
+                setTimeout(() => {
+                    frameContainer.classList.add("show-frame");
+                    cameraContainer.style.display = "block";
+                    imageContainer.style.display = "block";
+                    videoFeed.src = "{{ url_for('video_feed') }}";
+                    videoFeed.style.display = "block";
+                    closeBtn.style.display = "block";
+                    gestureText.style.display = "block";
+                }, 1000);
+            });
+        
+            closeBtn.addEventListener("click", function () {
+                console.log("Close Camera Clicked");
+        
+                document.getElementById("vatTitle").classList.remove("move-up");
+                openBtn.classList.remove("move-down");
+                frameContainer.classList.remove("show-frame");
+                cameraContainer.style.display = "none";
+                imageContainer.style.display = "none";
+                videoFeed.style.display = "none";
+                closeBtn.style.display = "none";
+                gestureText.style.display = "none";
+                videoFeed.src = "";
+        
+                if (robotGifContainer) {
+                    robotGifContainer.style.display = "block";
+                }
+        
+                // Resume intro
+                introContainer.style.display = "block";
+                isPaused = false;
+                showNextLine();
+            });
+        
+            function fetchGesture() {
+                fetch('/get_gesture')
+                    .then(response => response.json())
+                    .then(data => {
+                        gestureText.innerText = "Detected Gesture: " + (data.gesture || "None");
+        
+                        const isSpeaking = data.speaking;
+                        const roboVideo = document.getElementById("roboVideo");
+                        const roboImage = document.getElementById("roboImage");
+        
+                        if (isSpeaking) {
+                            roboImage.style.display = "none";
+                            roboVideo.style.display = "block";
+                            roboVideo.play();
+                        } else {
+                            roboVideo.pause();
+                            roboVideo.currentTime = 0;
+                            roboVideo.style.display = "none";
+                            roboImage.style.display = "block";
+                        }
+                    })
+                    .catch(error => console.log("Error fetching gesture:", error));
+            }
+        
+            setInterval(fetchGesture, 1000);
+
+                
+        });
+        function validatePassword() {
+          const passwordInput = document.getElementById("secretPassword").value;
+          const errorText = document.getElementById("passwordStatus");
+          const lockIcon = document.getElementById("lockIcon");
+        
+          if (passwordInput === "vat123") {
+            errorText.style.display = "none";
+            lockIcon.textContent = "🔓";
+            lockIcon.classList.add("unlock");
+        
+            setTimeout(() => {
+              // Hide modal
+              const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+              modal.hide();
+        
+              // Show success popup
+              Swal.fire({
+                title: "Access Granted!",
+                text: "Redirecting to Dashboard...",
+                icon: "success",
+                timer: 1800,
+                showConfirmButton: false
+              });
+        
+              // Redirect after popup
+              setTimeout(() => {
+                window.location.href = "http://127.0.0.1:5000/";
+              }, 2000); // wait a bit more than Swal timer
+        
+            }, 1000);
+        
+          } else {
+            errorText.style.display = "block";
+            lockIcon.classList.remove("unlock");
+            lockIcon.textContent = "🔒";
+          }
+        }        
+          
+          // Reset modal when closed
+          document.getElementById("passwordModal").addEventListener('hidden.bs.modal', () => {
+            document.getElementById("secretPassword").value = "";
+            document.getElementById("passwordStatus").style.display = "none";
+            const lockIcon = document.getElementById("lockIcon");
+            lockIcon.textContent = "🔒";
+            lockIcon.classList.remove("unlock");
+          });
+          
+        
+    </script>
+</body>
+</html>
